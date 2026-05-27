@@ -1,0 +1,864 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Advance Cash Passbook Matrix Pro</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <style>
+        body { -webkit-text-size-adjust: 100%; }
+        input, select, textarea, button { min-height: 44px; font-size: 14px !important; }
+        
+        .modal-blur-bg {
+            display: none;
+            position: fixed;
+            z-index: 9999;
+            left: 0; top: 0;
+            width: 100%; height: 100%;
+            background-color: rgba(15, 23, 42, 0.7);
+            backdrop-filter: blur(6px);
+            align-items: center; justify-content: center;
+            padding: 12px;
+        }
+        
+        .responsive-container {
+            width: 100%;
+            max-width: 1280px;
+            margin: 0 auto;
+        }
+        
+        .scroll-card-body {
+            max-height: calc(80vh - 160px);
+            overflow-y: auto;
+        }
+
+        .passbook-table th, .passbook-table td {
+            padding: 10px 8px;
+            border-bottom: 1px solid #e2e8f0;
+            text-align: center;
+        }
+
+        @media (max-width: 640px) {
+            .mobile-tight-text { font-size: 11px !important; }
+            .passbook-table th, .passbook-table td { padding: 8px 4px !important; font-size: 11px !important; }
+        }
+
+        .admin-tab-content { display: none; }
+        .admin-tab-content.active { display: block; }
+    </style>
+</head>
+<body class="bg-slate-100 font-sans min-h-screen text-slate-900 antialiased">
+
+    <header class="bg-gradient-to-r from-purple-900 to-indigo-950 text-white py-5 px-4 shadow-md text-center border-b-4 border-purple-600 sticky top-0 z-40">
+        <div class="responsive-container flex flex-col sm:flex-row justify-between items-center gap-4">
+            <div class="text-center sm:text-left">
+                <h1 class="text-xl md:text-2xl font-black tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-purple-300 to-pink-200">💰 ADVANCE CASH PASSBOOK SYSTEM</h1>
+                <p class="text-xs font-bold tracking-widest uppercase text-purple-300 mt-0.5">🔒 Verified Vault & Audit Ledger Control</p>
+            </div>
+            
+            <div class="flex items-center gap-3 w-full sm:w-auto justify-center">
+                <button onclick="openNotificationCenter()" class="relative p-2.5 bg-white/10 hover:bg-white/20 rounded-full cursor-pointer transition-all border border-white/10">
+                    <span class="text-lg">🔔</span>
+                    <span id="notif-count-badge" class="absolute -top-1 -right-1 bg-rose-600 text-[10px] font-black px-1.5 py-0.5 rounded-full hidden text-white">0</span>
+                </button>
+                <button onclick="openPassbookPortal()" class="bg-purple-600 hover:bg-purple-700 text-white font-black py-2 px-4 rounded-xl shadow text-xs cursor-pointer transition-all">
+                    📖 View Passbook (पासबुक देखें)
+                </button>
+                <button onclick="openWidgetBox('loginPanelModal')" class="bg-white/10 hover:bg-white/20 text-white font-bold py-2 px-3 rounded-xl text-xs cursor-pointer transition-all border border-white/10">
+                    🔐 Admin Login
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="p-4 responsive-container">
+        <div id="welcome-showcase" class="text-center py-16 max-w-md mx-auto bg-white p-6 rounded-2xl shadow-sm border border-slate-200 mt-6">
+            <div class="text-5xl mb-3">🏦</div>
+            <h2 class="text-base font-black text-purple-950">Advance Cash Management Ledger</h2>
+            <p class="text-xs text-slate-500 mt-2 leading-relaxed">Apna live running balance check karne ke liye upar diye gaye <strong>"View Passbook"</strong> button par click karein. Admin panel me badlav karne ke liye password se login karein.</p>
+        </div>
+
+        <div id="admin-workspace-panel" class="hidden w-full mt-4 bg-white p-4 rounded-2xl border border-slate-200 shadow-md">
+            <div class="bg-slate-900 text-white p-3 rounded-xl text-xs font-bold flex justify-between items-center px-4 shadow-inner mb-4">
+                <span>🔓 Database Console Connected (Admin Mode Active)</span>
+                <button onclick="logoutAdminGate()" class="bg-red-600 hover:bg-red-700 text-white text-[11px] px-3 py-1 rounded-md font-bold">Lock Console</button>
+            </div>
+            
+            <div class="grid grid-cols-3 gap-2 bg-slate-100 p-2 rounded-xl max-w-lg mx-auto mb-4">
+                <button onclick="switchAdminFeatureTab('tab-reg')" class="bg-purple-900 text-white font-black py-2 rounded-lg text-[11px] cursor-pointer">👤 Profile Desk</button>
+                <button onclick="switchAdminFeatureTab('tab-passbook')" class="bg-white text-slate-700 font-black py-2 rounded-lg text-[11px] cursor-pointer">💰 New Entry</button>
+                <button onclick="switchAdminFeatureTab('tab-edit-tx')" class="bg-white text-slate-700 font-black py-2 rounded-lg text-[11px] cursor-pointer">✏️ Edit Entry</button>
+            </div>
+
+            <div id="tab-reg" class="admin-tab-content active max-w-md mx-auto bg-slate-50 p-4 rounded-xl border">
+                
+                <div class="mb-6 pb-6 border-b border-slate-200">
+                    <h2 class="text-xs font-black text-purple-950 uppercase mb-3 pb-1 border-b">🆕 Create New Profile</h2>
+                    <div class="space-y-3">
+                        <input type="text" id="reg-name" placeholder="Holder Full Name" class="w-full p-2.5 bg-white border rounded-lg font-bold">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                            <input type="text" id="reg-mobile-1" placeholder="Mobile Number 1 (Main)" class="w-full p-2.5 bg-white border rounded-lg">
+                            <input type="text" id="reg-mobile-2" placeholder="Mobile Number 2 (Alert)" class="w-full p-2.5 bg-white border rounded-lg">
+                        </div>
+                        <div class="grid grid-cols-2 gap-2">
+                            <input type="text" id="reg-address" placeholder="Address (Village)" class="w-full p-2.5 bg-white border rounded-lg flex-1">
+                            <select id="reg-year" class="p-2.5 bg-white border rounded-lg font-bold">
+                                <option value="2025">2025</option>
+                                <option value="2026" selected>2026</option>
+                                <option value="2027">2027</option>
+                                <option value="2028">2028</option>
+                            </select>
+                        </div>
+                        <button onclick="processRegisterHolder()" class="w-full bg-slate-900 text-white font-black py-2.5 rounded-lg text-xs shadow">Save New Profile</button>
+                    </div>
+                </div>
+
+                <div class="mb-6 pb-6 border-b border-slate-200 bg-yellow-50/50 p-3 rounded-xl border border-yellow-200">
+                    <h2 class="text-xs font-black text-amber-900 uppercase mb-2 flex items-center gap-1">✏️ Edit Existing Profile (Mobile/Details Badlein)</h2>
+                    <div class="space-y-3">
+                        <select id="edit-holder-select-id" onchange="loadHolderDataForEditing()" class="w-full p-2 bg-white border border-amber-300 rounded-lg text-xs font-bold text-slate-800">
+                            <option value="">-- Choose Profile to Edit --</option>
+                        </select>
+                        
+                        <div id="edit-form-fields" class="hidden space-y-3">
+                            <input type="text" id="edit-name" placeholder="Edit Holder Name" class="w-full p-2.5 bg-white border rounded-lg font-bold text-xs">
+                            <div class="grid grid-cols-2 gap-2">
+                                <input type="text" id="edit-mobile-1" placeholder="Edit Mobile 1" class="w-full p-2.5 bg-white border rounded-lg text-xs">
+                                <input type="text" id="edit-mobile-2" placeholder="Edit Mobile 2" class="w-full p-2.5 bg-white border rounded-lg text-xs">
+                            </div>
+                            <input type="text" id="edit-address" placeholder="Edit Address" class="w-full p-2.5 bg-white border rounded-lg text-xs">
+                            
+                            <button onclick="submitEditedProfileDetails()" class="w-full bg-amber-600 hover:bg-amber-700 text-white font-black py-2 rounded-lg text-xs shadow">
+                                Save Updated Changes (Details Update Karein)
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-rose-50 p-3 rounded-xl border border-rose-200">
+                    <label class="block text-[11px] font-black text-rose-800 uppercase mb-1">🚨 Permanent Delete Bench (Strict Mode):</label>
+                    <p class="text-[10px] text-rose-600 mb-2 font-medium">* Account me ek bhi paisa (₹0 Bal) nahi hona chahiye aur correct Customer Key chahiye.</p>
+                    
+                    <div class="space-y-2">
+                        <select id="delete-holder-select-id" class="w-full p-2 bg-white border border-rose-300 rounded-lg text-xs font-bold text-slate-800">
+                            <option value="">-- Choose Holder Profile --</option>
+                        </select>
+                        <input type="password" id="delete-master-key-verify" placeholder="Enter Deletion Customer Key ID" class="w-full p-2 bg-white border border-rose-300 rounded-lg text-xs text-center font-bold tracking-widest text-rose-900">
+                        <button onclick="executePermanentAccountDeletion()" class="w-full bg-rose-600 hover:bg-rose-700 text-white font-black py-2 rounded-lg text-xs shadow">
+                            💥 Verify & Permanently Destroy Account
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+
+            <div id="tab-passbook" class="admin-tab-content max-w-md mx-auto bg-slate-50 p-4 rounded-xl border">
+                <h2 class="text-xs font-black text-purple-950 uppercase mb-3 pb-1 border-b flex justify-between">
+                    <span>💰 Post Entry to Passbook Ledger</span>
+                    <span class="text-purple-700 font-black" id="admin-current-live-bal-lbl">Bal: ₹0</span>
+                </h2>
+                <div class="space-y-3">
+                    <div class="grid grid-cols-2 gap-2">
+                        <select id="passbook-year" onchange="syncAdminPanelHoldersList()" class="p-2 border bg-white rounded-lg font-bold">
+                            <option value="2025">2025</option>
+                            <option value="2026" selected>2026</option>
+                            <option value="2027">2027</option>
+                            <option value="2028">2028</option>
+                        </select>
+                        <select id="passbook-holder-id" onchange="fetchAndDisplayAdminLiveBalance()" class="p-2 border bg-white rounded-lg font-black text-purple-950"><option value="">-- Choose Holder --</option></select>
+                    </div>
+                    <div class="border p-3 rounded-xl bg-purple-50 space-y-2">
+                        <label class="block text-[10px] font-black text-purple-900 uppercase">Transaction Mode Type:</label>
+                        <select id="passbook-tx-type" class="w-full p-2 border bg-white rounded font-black text-xs">
+                            <option value="CR" class="text-emerald-600 font-bold">🟢 Credit (Add Balance / Cash Jama Kiya)</option>
+                            <option value="DR" class="text-rose-600 font-bold">🔴 Debit (Nikaalna / Kharch Kiya)</option>
+                        </select>
+                        
+                        <label class="block text-[10px] font-black text-purple-900 uppercase mt-1">Enter Amount (₹):</label>
+                        <input type="number" id="passbook-amount" placeholder="₹ Enter Cash Amount" class="w-full p-2.5 border bg-white rounded-lg font-black text-center text-lg">
+                        
+                        <label class="block text-[10px] font-black text-purple-900 uppercase mt-1">Particulars / Naam Daalein (e.g. Guddu Prajapati / Gyanchand Prajapati):</label>
+                        <input type="text" id="passbook-particulars" placeholder="Naam likhein jo message me bhejna hai" class="w-full p-2.5 border bg-white rounded-lg text-xs font-semibold">
+                    </div>
+                    <button onclick="commitPassbookTransaction()" class="w-full bg-purple-700 hover:bg-purple-800 text-white font-black py-3 rounded-xl text-xs shadow-md">
+                        💥 Post Entry & Generate Receipt Slip
+                    </button>
+                </div>
+            </div>
+
+            <div id="tab-edit-tx" class="admin-tab-content max-w-md mx-auto bg-slate-50 p-4 rounded-xl border">
+                <h2 class="text-xs font-black text-amber-900 uppercase mb-3 pb-1 border-b">✏️ Edit Past Entry via Receipt ID</h2>
+                
+                <div class="space-y-3">
+                    <div class="flex gap-2">
+                        <input type="text" id="search-tx-id" placeholder="Enter Receipt ID (e.g. TXN123456)" class="flex-1 p-2 border rounded-lg font-bold text-center text-xs uppercase tracking-wider border-amber-400">
+                        <button onclick="findAndLoadTransactionForEditing()" class="bg-amber-600 hover:bg-amber-700 text-white font-black px-4 rounded-lg text-xs">Find</button>
+                    </div>
+
+                    <div id="tx-edit-form-block" class="hidden border p-3 rounded-xl bg-amber-50/60 space-y-3 border-amber-200">
+                        <div class="text-[11px] font-bold text-slate-600 bg-white p-2 rounded border">
+                            <p>👤 <span id="tx-edit-holder-label" class="text-slate-900 font-black">--</span></p>
+                            <p>📅 Original Node: <span id="tx-edit-meta-label">--</span></p>
+                        </div>
+
+                        <div>
+                            <label class="block text-[10px] font-black text-amber-900 uppercase mb-0.5">Edit Date (DD/MM/YYYY):</label>
+                            <input type="text" id="tx-edit-date" placeholder="DD/MM/YYYY" class="w-full p-2 bg-white border rounded text-xs font-bold text-center">
+                        </div>
+
+                        <div>
+                            <label class="block text-[10px] font-black text-amber-900 uppercase mb-0.5">Edit Transaction Mode:</label>
+                            <select id="tx-edit-type" class="w-full p-2 bg-white border rounded text-xs font-black">
+                                <option value="CR">🟢 Credit (Jama)</option>
+                                <option value="DR">🔴 Debit (Nikala)</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="block text-[10px] font-black text-amber-900 uppercase mb-0.5">Edit Amount (₹):</label>
+                            <input type="number" id="tx-edit-amount" class="w-full p-2 bg-white border rounded text-sm font-black text-center text-amber-900">
+                        </div>
+
+                        <div>
+                            <label class="block text-[10px] font-black text-amber-900 uppercase mb-0.5">Edit Particulars / Naam:</label>
+                            <input type="text" id="tx-edit-particulars" class="w-full p-2 bg-white border rounded text-xs font-bold">
+                        </div>
+
+                        <button onclick="saveModifiedTransactionData()" class="w-full bg-slate-900 hover:bg-black text-white font-black py-2.5 rounded-lg text-xs shadow">
+                            💾 Update Transaction & Recalculate Passbook
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <div id="customerPassbookModal" class="modal-blur-bg" style="display: none;">
+        <div class="bg-white text-slate-900 rounded-2xl w-full max-w-4xl p-3 md:p-5 shadow-2xl relative flex flex-col max-h-[96vh] border">
+            <button onclick="closeWidgetBox('customerPassbookModal')" class="absolute top-2 right-2 bg-slate-100 text-slate-500 w-8 h-8 rounded-full flex items-center justify-center font-black text-lg hover:bg-slate-200">&times;</button>
+            
+            <div class="text-center mb-2 border-b pb-1">
+                <h3 class="text-sm font-black text-purple-950 uppercase tracking-wide">📖 Personal Ledger Passbook Statement Hub</h3>
+            </div>
+            
+            <div class="bg-purple-50 p-3 rounded-xl border border-purple-200 text-xs space-y-2">
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                    <div>
+                        <label class="block text-[10px] font-black text-purple-950 uppercase mb-0.5">Select Active Year:</label>
+                        <select id="pass-search-year" onchange="syncPublicSearchDropdownHolders()" class="p-2 border bg-white rounded-lg font-bold w-full text-xs text-slate-800">
+                            <option value="2025">2025</option>
+                            <option value="2026" selected>2026</option>
+                            <option value="2027">2027</option>
+                            <option value="2028">2028</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-black text-purple-950 uppercase mb-0.5">Account Holder Name:</label>
+                        <select id="pass-search-holder-id" class="p-2 border bg-white rounded-lg font-black w-full text-xs text-slate-800"><option value="">-- Choose Name --</option></select>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-black text-purple-950 uppercase mb-0.5">Select Month Duration Filter:</label>
+                        <select id="pass-search-range" class="p-2 border bg-white rounded-lg font-black w-full text-xs text-purple-900">
+                            <option value="ALL" selected>Complete 12 Months Ledger</option>
+                            <option value="1">1 Month History</option>
+                            <option value="3">3 Months Statement</option>
+                            <option value="6">6 Months Statement</option>
+                        </select>
+                    </div>
+                </div>
+                <button onclick="executePublicPassbookSearch()" class="w-full bg-purple-700 hover:bg-purple-800 text-white font-black py-2 rounded-lg text-xs shadow transition-all">
+                    🔍 Open Running Passbook Ledger
+                </button>
+            </div>
+            
+            <div id="pass-output-viewport" class="scroll-card-body mt-2 pr-1 hidden"></div>
+        </div>
+    </div>
+
+    <div id="notificationCenterModal" class="modal-blur-bg" style="display: none;">
+        <div class="bg-white text-slate-900 rounded-xl w-full max-w-lg p-4 shadow-2xl border relative flex flex-col max-h-[85vh]">
+            <button onclick="closeWidgetBox('notificationCenterModal')" class="absolute top-2 right-2 text-slate-400 font-bold text-lg bg-slate-100 w-7 h-7 rounded-full flex items-center justify-center hover:bg-slate-200">&times;</button>
+            <h3 class="text-xs font-black uppercase text-purple-900 tracking-wider mb-2 border-b pb-1">🔔 System Live Notifications & Bank Alerts</h3>
+            <div id="notification-timeline-box" class="space-y-3 overflow-y-auto flex-1 pr-1 text-xs mt-1">
+                </div>
+        </div>
+    </div>
+
+    <div id="receiptPrintModal" class="modal-blur-bg" style="display: none;">
+        <div class="bg-white text-slate-900 rounded-xl p-4 max-w-sm w-full border-4 border-double border-slate-400 shadow-2xl relative">
+            <button onclick="closeWidgetBox('receiptPrintModal')" class="absolute top-1 right-2 font-black text-lg text-slate-400 hover:text-slate-900">&times;</button>
+            
+            <div id="receipt-printable-area" class="font-mono text-xs text-center space-y-2">
+                <div class="border-b pb-1 border-slate-300">
+                    <h4 class="font-black text-sm uppercase text-slate-900">ADVANCE CASH LEDGER</h4>
+                    <p class="text-[9px] text-slate-500">Official Transaction Slip</p>
+                </div>
+                <div class="text-left text-[11px] space-y-1 py-1">
+                    <p><strong>Receipt ID:</strong> <span id="rcpt-id">--</span></p>
+                    <p><strong>Date/Time:</strong> <span id="rcpt-timestamp">--</span></p>
+                    <p><strong>Account Holder:</strong> <span id="rcpt-name" class="font-bold text-slate-900">--</span></p>
+                    <p><strong>Mobiles:</strong> <span id="rcpt-mobiles-view">--</span></p>
+                    <p class="whitespace-normal break-words"><strong>Particulars:</strong> <span id="rcpt-desc">--</span></p>
+                </div>
+                <div class="border-y border-dashed py-2 my-2 bg-slate-50 border-slate-300">
+                    <p class="text-[9px] font-bold tracking-wider" id="rcpt-mode-title">VOUCHER STATUS</p>
+                    <h2 class="text-2xl font-black text-slate-900" id="rcpt-amount-val">₹0.00</h2>
+                </div>
+                <div class="text-right text-[11px] font-black text-purple-950">
+                    Net Closing Balance: <span id="rcpt-closing-bal" class="text-purple-700">₹0</span>
+                </div>
+                <div class="pt-2 border-t text-[8px] text-slate-400 border-slate-200">
+                    * Automated Cloud Digital Receipt. No physical signature needed. *
+                </div>
+            </div>
+            <button onclick="window.print()" class="w-full mt-3 bg-purple-900 hover:bg-purple-950 text-white font-black py-2 rounded-xl text-xs shadow">🖨️ Print / Save PDF Receipt</button>
+        </div>
+    </div>
+
+    <div id="loginPanelModal" class="modal-blur-bg">
+        <div class="bg-white rounded-xl max-w-xs w-full p-4 border text-center shadow-2xl">
+            <h4 class="text-xs font-black uppercase text-slate-400 mb-2">System Access PIN</h4>
+            <input type="password" id="admin-pass-key-input" placeholder="Enter PIN" class="w-full p-2 border rounded-lg text-center font-bold tracking-widest mb-2">
+            <button onclick="verifyAndUnlockAdminWorkspace()" class="w-full bg-slate-900 text-white font-bold py-2 rounded text-xs shadow">Unlock Admin Engine</button>
+            <button onclick="closeWidgetBox('loginPanelModal')" class="w-full text-slate-400 text-xs mt-2">Cancel</button>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, collection, doc, setDoc, getDoc, getDocs, updateDoc, deleteDoc, query, where } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+          apiKey: "AIzaSyAw_f7ew1GMy5HhL9Io-i7zfA3mOQSpn2s",
+          authDomain: "super-educated-class.firebaseapp.com",
+          databaseURL: "https://super-educated-class-default-rtdb.firebaseio.com",
+          projectId: "super-educated-class",
+          storageBucket: "super-educated-class.firebasestorage.app",
+          messagingSenderId: "993892326574",
+          appId: "1:993892326574:web:356ca4361c718aff4da13f"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        let activeAdminAuthorized = false;
+        let globalSystemNotificationsArray = [];
+        
+        // Active pointers for currently searched edit transaction
+        let editingTxTargetUid = null;
+        let editingTxIndex = -1;
+
+        window.openWidgetBox = function(id) { document.getElementById(id).style.display = 'flex'; }
+        window.closeWidgetBox = function(id) { document.getElementById(id).style.display = 'none'; }
+
+        window.openPassbookPortal = function() {
+            openWidgetBox('customerPassbookModal');
+            syncPublicSearchDropdownHolders();
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            setTimeout(() => {
+                openPassbookPortal();
+            }, 800);
+        });
+
+        window.switchAdminFeatureTab = function(tabId) {
+            document.querySelectorAll('.admin-tab-content').forEach(el => el.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            if(tabId === 'tab-passbook') syncAdminPanelHoldersList();
+            if(tabId === 'tab-reg') {
+                syncDeleteDropdownList();
+                syncEditDropdownList();
+            }
+            if(tabId === 'tab-edit-tx') {
+                document.getElementById('search-tx-id').value = "";
+                document.getElementById('tx-edit-form-block').classList.add('hidden');
+            }
+        }
+
+        window.verifyAndUnlockAdminWorkspace = function() {
+            if(document.getElementById('admin-pass-key-input').value === "2026") {
+                activeAdminAuthorized = true;
+                closeWidgetBox('loginPanelModal');
+                document.getElementById('welcome-showcase').classList.add('hidden');
+                document.getElementById('admin-workspace-panel').classList.remove('hidden');
+                switchAdminFeatureTab('tab-reg');
+                buildNotificationLiveStream();
+            } else { alert("Invalid Security Pin Code!"); }
+        }
+
+        window.logoutAdminGate = function() {
+            activeAdminAuthorized = false;
+            document.getElementById('admin-workspace-panel').classList.add('hidden');
+            document.getElementById('welcome-showcase').classList.remove('hidden');
+        }
+
+        window.processRegisterHolder = async function() {
+            const name = document.getElementById('reg-name').value.trim();
+            const mob1 = document.getElementById('reg-mobile-1').value.trim();
+            const mob2 = document.getElementById('reg-mobile-2').value.trim();
+            const yr = document.getElementById('reg-year').value;
+            const addr = document.getElementById('reg-address').value.trim();
+            if(!name) { alert("Holder Name is mandatory!"); return; }
+
+            const counterDocRef = doc(db, "metadata", "passbook_counters");
+            let currentSerial = 5001;
+            const counterSnap = await getDoc(counterDocRef);
+            if(counterSnap.exists()) currentSerial = (counterSnap.data().lastPassbookSerial || 5000) + 1;
+            await setDoc(counterDocRef, { lastPassbookSerial: currentSerial }, { merge: true });
+
+            const targetUid = `PASS_${yr}_${currentSerial}`;
+
+            await setDoc(doc(db, "passbook_accounts", targetUid), {
+                serialNumber: currentSerial, accountId: targetUid, name: name,
+                mobile: mob1 || "N/A", mobileAlert: mob2 || "N/A", address: addr || "N/A", year: yr,
+                passbookLedger: [], currentNetBalance: 0, timestamp: Date.now()
+            });
+            
+            document.getElementById('reg-name').value = "";
+            document.getElementById('reg-mobile-1').value = "";
+            document.getElementById('reg-mobile-2').value = "";
+            document.getElementById('reg-address').value = "";
+            alert("Dual-Alert Profile Saved Successfully!");
+            syncDeleteDropdownList();
+            syncEditDropdownList();
+        }
+
+        async function syncEditDropdownList() {
+            const el = document.getElementById('edit-holder-select-id');
+            el.innerHTML = "<option value=''>Syncing accounts for edit...</option>";
+            const snap = await getDocs(collection(db, "passbook_accounts"));
+            el.innerHTML = "<option value=''>-- Choose Profile to Edit --</option>";
+            snap.forEach(d => { el.innerHTML += `<option value="${d.id}">${d.data().name} (ID: ${d.data().serialNumber})</option>`; });
+        }
+
+        window.loadHolderDataForEditing = async function() {
+            const id = document.getElementById('edit-holder-select-id').value;
+            const form = document.getElementById('edit-form-fields');
+            if(!id) { form.classList.add('hidden'); return; }
+
+            const snap = await getDoc(doc(db, "passbook_accounts", id));
+            if(snap.exists()) {
+                const u = snap.data();
+                document.getElementById('edit-name').value = u.name || '';
+                document.getElementById('edit-mobile-1').value = u.mobile === 'N/A' ? '' : (u.mobile || '');
+                document.getElementById('edit-mobile-2').value = u.mobileAlert === 'N/A' ? '' : (u.mobileAlert || '');
+                document.getElementById('edit-address').value = u.address === 'N/A' ? '' : (u.address || '');
+                form.classList.remove('hidden');
+            }
+        }
+
+        window.submitEditedProfileDetails = async function() {
+            const id = document.getElementById('edit-holder-select-id').value;
+            const name = document.getElementById('edit-name').value.trim();
+            const m1 = document.getElementById('edit-mobile-1').value.trim();
+            const m2 = document.getElementById('edit-mobile-2').value.trim();
+            const addr = document.getElementById('edit-address').value.trim();
+
+            if(!name) { alert("Name column cannot be kept empty!"); return; }
+
+            await updateDoc(doc(db, "passbook_accounts", id), {
+                name: name,
+                mobile: m1 || "N/A",
+                mobileAlert: m2 || "N/A",
+                address: addr || "N/A"
+            });
+
+            alert("Profile Record Updated Successfully!");
+            document.getElementById('edit-form-fields').classList.add('hidden');
+            document.getElementById('edit-holder-select-id').value = "";
+            syncEditDropdownList();
+            syncDeleteDropdownList();
+            buildNotificationLiveStream();
+        }
+
+        async function syncDeleteDropdownList() {
+            const el = document.getElementById('delete-holder-select-id');
+            if(!el) return;
+            el.innerHTML = "<option value=''>Syncing accounts list...</option>";
+            const snap = await getDocs(collection(db, "passbook_accounts"));
+            el.innerHTML = "<option value=''>-- Choose Holder Profile --</option>";
+            snap.forEach(d => { el.innerHTML += `<option value="${d.id}">${d.data().name} (ID: ${d.data().serialNumber}) [Bal: ₹${d.data().currentNetBalance || 0}]</option>`; });
+        }
+
+        window.executePermanentAccountDeletion = async function() {
+            const targetId = document.getElementById('delete-holder-select-id').value;
+            const keyVerify = document.getElementById('delete-master-key-verify').value.trim();
+            
+            if(!targetId) { alert("Please select an account profile first!"); return; }
+            if(keyVerify !== "22322780") { alert("🚨 ERROR: Customer Security ID is incorrect or unauthorized!"); return; }
+
+            const recordSnap = await getDoc(doc(db, "passbook_accounts", targetId));
+            if(recordSnap.exists()) {
+                const liveAmt = recordSnap.data().currentNetBalance || 0;
+                if(liveAmt !== 0) {
+                    alert(`🚨 STOP: Account delete nahi kiya ja sakta! Is account me abhi ₹${liveAmt} ka balance baaki hai. Balance zero hona chahiye!`);
+                    return;
+                }
+            }
+            
+            if(confirm("⚠️ CRITICAL CONFIRMATION: Kya aap sach me is verified ₹0 balance account ko database se completely delete karna chahte hain?")) {
+                await deleteDoc(doc(db, "passbook_accounts", targetId));
+                alert("Account permanent wiped out safely from cloud storage node.");
+                document.getElementById('delete-master-key-verify').value = "";
+                syncDeleteDropdownList();
+                syncEditDropdownList();
+            }
+        }
+
+        window.syncPublicSearchDropdownHolders = async function() {
+            const yr = document.getElementById('pass-search-year').value;
+            const el = document.getElementById('pass-search-holder-id');
+            const snap = await getDocs(query(collection(db, "passbook_accounts"), where("year", "==", yr)));
+            el.innerHTML = "<option value=''>-- Choose Name --</option>";
+            snap.forEach(d => { el.innerHTML += `<option value="${d.id}">${d.data().name} (ID: ${d.data().serialNumber})</option>`; });
+        }
+
+        window.syncAdminPanelHoldersList = async function() {
+            const yr = document.getElementById('passbook-year').value;
+            const el = document.getElementById('passbook-holder-id');
+            const snap = await getDocs(query(collection(db, "passbook_accounts"), where("year", "==", yr)));
+            el.innerHTML = "<option value=''>-- Choose Holder --</option>";
+            snap.forEach(d => { el.innerHTML += `<option value="${d.id}">${d.data().name} (ID: ${d.data().serialNumber})</option>`; });
+        }
+
+        window.fetchAndDisplayAdminLiveBalance = async function() {
+            const targetUid = document.getElementById('passbook-holder-id').value;
+            if(!targetUid) return;
+            const snap = await getDoc(doc(db, "passbook_accounts", targetUid));
+            if(snap.exists()) {
+                document.getElementById('admin-current-live-bal-lbl').innerText = `Bal: ₹${snap.data().currentNetBalance || 0}`;
+            }
+        }
+
+        window.commitPassbookTransaction = async function() {
+            const targetUid = document.getElementById('passbook-holder-id').value;
+            const type = document.getElementById('passbook-tx-type').value; 
+            const amount = parseFloat(document.getElementById('passbook-amount').value) || 0;
+            const particulars = document.getElementById('passbook-particulars').value.trim();
+            
+            if(!targetUid || amount <= 0 || !particulars) { alert("Please complete ledger input data!"); return; }
+
+            const docRef = doc(db, "passbook_accounts", targetUid);
+            const snap = await getDoc(docRef);
+            let data = snap.data();
+            
+            let currentBal = data.currentNetBalance || 0;
+            let updatedBal = (type === 'CR') ? (currentBal + amount) : (currentBal - amount);
+
+            const now = new Date();
+            let cleanDate = `${String(now.getDate()).padStart(2, '0')}/${String(now.getMonth() + 1).padStart(2, '0')}/${now.getFullYear()}`;
+            let cleanTime = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+            let newTxNode = {
+                txId: "TXN" + Math.floor(100000 + Math.random() * 900000),
+                date: cleanDate, time: cleanTime,
+                particulars: particulars, type: type, amount: amount, 
+                rowRunningSnapshotBalance: updatedBal, timestamp: Date.now(),
+                mainMobile: data.mobile || "N/A", alertMobile: data.mobileAlert || "N/A"
+            };
+
+            if(!data.passbookLedger) data.passbookLedger = [];
+            data.passbookLedger.push(newTxNode);
+
+            await updateDoc(docRef, { passbookLedger: data.passbookLedger, currentNetBalance: updatedBal });
+
+            launchDigitalReceiptBox(newTxNode, data.name);
+
+            document.getElementById('passbook-amount').value = "";
+            document.getElementById('passbook-particulars').value = "";
+            document.getElementById('admin-current-live-bal-lbl').innerText = `Bal: ₹${updatedBal}`;
+            buildNotificationLiveStream();
+        }
+
+        // ================= 🔍 RECEIPT ID SEARCH & EDIT ENGINE =================
+        window.findAndLoadTransactionForEditing = async function() {
+            const searchId = document.getElementById('search-tx-id').value.trim().toUpperCase();
+            const formBlock = document.getElementById('tx-edit-form-block');
+            
+            if(!searchId) { alert("Please enter a Receipt ID!"); return; }
+            
+            editingTxTargetUid = null;
+            editingTxIndex = -1;
+            
+            const snap = await getDocs(collection(db, "passbook_accounts"));
+            let found = false;
+            
+            snap.forEach(d => {
+                const acc = d.data();
+                if(acc.passbookLedger && acc.passbookLedger.length > 0) {
+                    for(let i = 0; i < acc.passbookLedger.length; i++) {
+                        if(acc.passbookLedger[i].txId === searchId) {
+                            editingTxTargetUid = d.id;
+                            editingTxIndex = i;
+                            
+                            // Load into edit forms
+                            document.getElementById('tx-edit-holder-label').innerText = `${acc.name} (ID: ${acc.serialNumber})`;
+                            document.getElementById('tx-edit-meta-label').innerText = `${acc.passbookLedger[i].date} - ₹${acc.passbookLedger[i].amount}`;
+                            
+                            document.getElementById('tx-edit-date').value = acc.passbookLedger[i].date;
+                            document.getElementById('tx-edit-type').value = acc.passbookLedger[i].type;
+                            document.getElementById('tx-edit-amount').value = acc.passbookLedger[i].amount;
+                            document.getElementById('tx-edit-particulars').value = acc.passbookLedger[i].particulars;
+                            
+                            formBlock.classList.remove('hidden');
+                            found = true;
+                            break;
+                        }
+                    }
+                }
+            });
+            
+            if(!found) {
+                alert("🚨 Receipt ID Not Found! Kripya sahi ID check karein.");
+                formBlock.classList.add('hidden');
+            }
+        }
+
+        // ================= 💾 RE-CALCULATE AND UPDATE TRANSACTION MATRIX =================
+        window.saveModifiedTransactionData = async function() {
+            if(!editingTxTargetUid || editingTxIndex === -1) return;
+            
+            const dateVal = document.getElementById('tx-edit-date').value.trim();
+            const typeVal = document.getElementById('tx-edit-type').value;
+            const amtVal = parseFloat(document.getElementById('tx-edit-amount').value) || 0;
+            const partVal = document.getElementById('tx-edit-particulars').value.trim();
+            
+            if(!dateVal || amtVal <= 0 || !partVal) { alert("Fields cannot be empty!"); return; }
+            
+            const docRef = doc(db, "passbook_accounts", editingTxTargetUid);
+            const snap = await getDoc(docRef);
+            if(!snap.exists()) return;
+            
+            let data = snap.data();
+            
+            // Modify the specific targeted index block directly
+            data.passbookLedger[editingTxIndex].date = dateVal;
+            data.passbookLedger[editingTxIndex].type = typeVal;
+            data.passbookLedger[editingTxIndex].amount = amtVal;
+            data.passbookLedger[editingTxIndex].particulars = partVal;
+            
+            // CRITICAL: Sort by timestamp to preserve original sequential ledger entries order
+            data.passbookLedger.sort((a,b) => a.timestamp - b.timestamp);
+            
+            // Recalculate all passbook snapshot running balances sequentially from start to end
+            let calculatedRunningBal = 0;
+            for(let i = 0; i < data.passbookLedger.length; i++) {
+                if(data.passbookLedger[i].type === 'CR') {
+                    calculatedRunningBal += data.passbookLedger[i].amount;
+                } else {
+                    calculatedRunningBal -= data.passbookLedger[i].amount;
+                }
+                data.passbookLedger[i].rowRunningSnapshotBalance = calculatedRunningBal;
+            }
+            
+            // Update master record variables
+            await updateDoc(docRef, {
+                passbookLedger: data.passbookLedger,
+                currentNetBalance: calculatedRunningBal
+            });
+            
+            alert("✨ Transaction Edited Successfully! Passbook balance and receipt records have been securely recalculated.");
+            document.getElementById('tx-edit-form-block').classList.add('hidden');
+            document.getElementById('search-tx-id').value = "";
+            
+            buildNotificationLiveStream();
+        }
+
+        window.launchDigitalReceiptBox = function(txNode, holderName) {
+            document.getElementById('rcpt-id').innerText = txNode.txId || "N/A";
+            document.getElementById('rcpt-timestamp').innerText = `${txNode.date} (${txNode.time || ''})`;
+            document.getElementById('rcpt-name').innerText = holderName;
+            document.getElementById('rcpt-mobiles-view').innerText = `${txNode.mainMobile || 'N/A'} / ${txNode.alertMobile || 'N/A'}`;
+            document.getElementById('rcpt-desc').innerText = txNode.particulars;
+            document.getElementById('rcpt-amount-val').innerText = `₹${txNode.amount}`;
+            document.getElementById('rcpt-closing-bal').innerText = `₹${txNode.rowRunningSnapshotBalance}`;
+
+            const titleEl = document.getElementById('rcpt-mode-title');
+            if(txNode.type === 'CR') {
+                titleEl.className = "text-[10px] font-black text-emerald-600 tracking-wider uppercase";
+                titleEl.innerText = "🟢 CASH RECEIVED (CREDIT)";
+            } else {
+                titleEl.className = "text-[10px] font-black text-rose-600 tracking-wider uppercase";
+                titleEl.innerText = "🔴 CASH WITHDRAWAL (DEBIT)";
+            }
+            openWidgetBox('receiptPrintModal');
+        }
+
+        // ================= 🔔 TIMELINE NOTIFICATION WITH CUSTOM BADA BLACK/WHITE TEXT ALERTS =================
+        async function buildNotificationLiveStream() {
+            const listTarget = document.getElementById('notification-timeline-box');
+            if(!listTarget) return;
+            const badge = document.getElementById('notif-count-badge');
+            listTarget.innerHTML = "";
+            
+            const snap = await getDocs(collection(db, "passbook_accounts"));
+            globalSystemNotificationsArray = [];
+
+            snap.forEach(d => {
+                const acc = d.data();
+                if(acc.passbookLedger && acc.passbookLedger.length > 0) {
+                    acc.passbookLedger.forEach(tx => {
+                        globalSystemNotificationsArray.push({ 
+                            ...tx, 
+                            holderName: acc.name,
+                            serialNumber: acc.serialNumber,
+                            mainMobile: acc.mobile || 'N/A',
+                            alertMobile: acc.mobileAlert || 'N/A'
+                        });
+                    });
+                }
+            });
+
+            globalSystemNotificationsArray.sort((a,b) => b.timestamp - a.timestamp);
+
+            if(globalSystemNotificationsArray.length > 0) {
+                badge.innerText = globalSystemNotificationsArray.length;
+                badge.classList.remove('hidden');
+                
+                globalSystemNotificationsArray.forEach(notif => {
+                    const isCr = notif.type === 'CR';
+                    
+                    let modeTextStyled = "";
+                    if(isCr) {
+                        modeTextStyled = `Urgent SMS: Your A/C XX${notif.serialNumber} has been <span style="color: #10b981; font-weight: 900;">Credited with ₹${notif.amount}</span> on ${notif.date}. Info: Electric motor water pump. Received from: ${notif.particulars}.`;
+                    } else {
+                        modeTextStyled = `Urgent SMS: Your A/C XX${notif.serialNumber} has been <span style="color: #ef4444; font-weight: 900;">Debited by ₹${notif.amount}</span> on ${notif.date}. Info: Electric motor water pump. Withdraw by: ${notif.particulars}.`;
+                    }
+
+                    let balanceSegmentStyled = `Current Total Net Bal: <span style="background-color: #fef08a; color: #000000; padding: 2px 6px; border-radius: 4px; font-weight: 900; border: 1px solid #eab308;">₹${notif.rowRunningSnapshotBalance}</span>`;
+
+                    listTarget.innerHTML += `
+                        <div class="p-3 rounded-xl border-l-4 ${isCr?'border-emerald-500 bg-emerald-50/30':'border-rose-500 bg-rose-50/30'} flex flex-col gap-2 shadow-sm border">
+                            <div class="flex justify-between items-center">
+                                <p class="font-black text-slate-900 text-xs">👤 ${notif.holderName} [ID: ${notif.txId}] &rarr; <span class="${isCr?'text-emerald-700':'text-rose-700'}">${isCr?'Jama (CR)':'Nikala (DR)'}</span></p>
+                                <span class="font-mono font-black ${isCr?'text-emerald-600':'text-rose-600'} text-xs">₹${notif.amount}</span>
+                            </div>
+                            
+                            <div class="bg-white text-slate-950 font-sans text-[13px] md:text-[14px] p-3.5 rounded-xl shadow-md border border-slate-300 whitespace-normal break-words tracking-normal leading-relaxed font-semibold">
+                                💬 "${modeTextStyled} ${balanceSegmentStyled}."
+                            </div>
+                            
+                            <div class="flex justify-between items-center text-[10px] text-slate-500 font-bold pt-1 border-t border-slate-200">
+                                <span>📲 Dual Alert: ${notif.mainMobile} / ${notif.alertMobile}</span>
+                                <div class="flex gap-2">
+                                    <span class="text-slate-400 font-normal">${notif.date} | ${notif.time || ''}</span>
+                                    <button onclick='viewSpecificReceiptFromLog(${JSON.stringify(notif)})' class="text-purple-700 font-black underline cursor-pointer">Slip</button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+            } else {
+                listTarget.innerHTML = "<p class='text-center text-slate-400 italic py-4'>No real-time activity logged yet.</p>";
+                badge.classList.add('hidden');
+            }
+        }
+        window.openNotificationCenter = function() {
+            buildNotificationLiveStream();
+            openWidgetBox('notificationCenterModal');
+        }
+        window.viewSpecificReceiptFromLog = function(txObject) {
+            launchDigitalReceiptBox(txObject, txObject.holderName);
+        }
+
+        // ================= 📖 RUNNING LEDGER LISTENER =================
+        window.executePublicPassbookSearch = async function() {
+            const targetDocId = document.getElementById('pass-search-holder-id').value;
+            const outBox = document.getElementById('pass-output-viewport');
+            const rangeFilter = document.getElementById('pass-search-range').value; 
+            if(!targetDocId) { alert("Please choose an account profile first!"); return; }
+
+            outBox.innerHTML = "<div class='text-purple-600 font-bold text-xs text-center py-4'>Processing running matrix ledger sheets...</div>";
+            outBox.classList.remove('hidden');
+
+            const snap = await getDoc(doc(db, "passbook_accounts", targetDocId));
+            const h = snap.data();
+            
+            let passbookRowsHtml = "";
+            let finalLiveBalance = h.currentNetBalance || 0;
+
+            if(h.passbookLedger && h.passbookLedger.length > 0) {
+                let sortedLogs = [...h.passbookLedger].sort((a,b) => a.timestamp - b.timestamp);
+                
+                if(rangeFilter === "1") {
+                    sortedLogs = sortedLogs.slice(-5);
+                } else if(rangeFilter === "3") {
+                    sortedLogs = sortedLogs.slice(-15);
+                } else if(rangeFilter === "6") {
+                    sortedLogs = sortedLogs.slice(-30);
+                }
+
+                // Reverse to show latest on top in passbook UI table view
+                sortedLogs.reverse();
+
+                sortedLogs.forEach(entry => {
+                    let dr = "-"; let cr = "-";
+                    if(entry.type === 'DR') {
+                        dr = `<span class="text-rose-600 font-black">₹${entry.amount}</span>`;
+                    } else {
+                        cr = `<span class="text-emerald-600 font-black">₹${entry.amount}</span>`;
+                    }
+                    
+                    entry.mainMobile = h.mobile || 'N/A';
+                    entry.alertMobile = h.mobileAlert || 'N/A';
+                    let serializedNode = JSON.stringify(entry).replace(/'/g, "&#39;");
+
+                    passbookRowsHtml += `
+                        <tr class="border-b text-xs text-slate-800 hover:bg-slate-50 transition-all">
+                            <td class="p-2 text-center font-mono text-[11px] text-slate-500 leading-tight">
+                                ${entry.date}<br><span class="text-[9px] text-slate-400">${entry.time || ''}</span><br>
+                                <span class="text-[9px] bg-slate-100 px-1 rounded font-bold text-slate-600">${entry.txId}</span>
+                            </td>
+                            <td class="p-2 text-left font-bold text-slate-900 mobile-tight-text break-words max-w-[130px]">${entry.particulars}</td>
+                            <td class="p-2 text-center bg-rose-50/40">${dr}</td>
+                            <td class="p-2 text-center bg-emerald-50/40">${cr}</td>
+                            <td class="p-2 text-right font-black bg-purple-50/50 text-purple-950">₹${entry.rowRunningSnapshotBalance}</td>
+                            <td class="p-1 text-center">
+                                <button onclick='launchDigitalReceiptBox(${serializedNode}, "${h.name}")' class="bg-purple-100 hover:bg-purple-200 text-[11px] text-purple-700 font-black px-2 py-1 rounded transition-all cursor-pointer">📄 Slip</button>
+                            </td>
+                        </tr>
+                    `;
+                });
+            } else {
+                passbookRowsHtml = `<tr><td colspan="6" class="p-4 text-center text-slate-400 italic">No transactions captured inside this parameter framework.</td></tr>`;
+            }
+
+            outBox.innerHTML = `
+                <div class="p-2 md:p-4 bg-white rounded-xl border border-slate-200 shadow-inner">
+                    <div class="flex justify-between items-center border-b pb-2 mb-2">
+                        <div>
+                            <h4 class="font-black text-purple-950 text-sm">👤 Holder Account: ${h.name}</h4>
+                            <p class="text-[11px] text-slate-500 font-bold">UID Serial: ${h.serialNumber} | Ville: ${h.address}</p>
+                            <p class="text-[10px] text-slate-400 font-medium">Alert Nodes: ${h.mobile || 'N/A'} , ${h.mobileAlert || 'N/A'}</p>
+                        </div>
+                        <div class="text-right bg-purple-900 text-white px-3 py-1.5 rounded-xl border shadow">
+                            <span class="text-[9px] font-bold text-purple-200 block uppercase tracking-wider">Live Balance</span>
+                            <span class="text-sm font-black">₹${finalLiveBalance}</span>
+                        </div>
+                    </div>
+                    
+                    <div class="overflow-x-auto rounded-xl border">
+                        <table class="w-full text-center table-fixed min-w-[340px]">
+                            <thead class="bg-purple-950 text-white font-bold text-[11px]">
+                                <tr>
+                                    <th class="w-[20%] p-2">Date / ID</th>
+                                    <th class="w-[28%] p-2 text-left">Particulars</th>
+                                    <th class="w-[15%] p-2">Debit(-)</th>
+                                    <th class="w-[15%] p-2">Credit(+)</th>
+                                    <th class="w-[14%] p-2 text-right">Balance</th>
+                                    <th class="w-[8%] p-1">Slip</th>
+                                </tr>
+                            </thead>
+                            <tbody>${passbookRowsHtml}</tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+        }
+
+        buildNotificationLiveStream();
+    </script>
+</body>
+</html>
